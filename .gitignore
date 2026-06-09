@@ -1,8 +1,24 @@
+# Private interview preparation notes
+interview-drills/
+private/
+personal-notes/
+reviews/
+weakness-log/
+
+# Secrets / local config
 .env
-*.env
 .env.*
-node_modules/
-__pycache__/
-*.log
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.*
+
+# OS / editor
 .DS_Store
+Thumbs.db
 .vscode/
+.idea/
+
+# Generated archives
+*.zip
