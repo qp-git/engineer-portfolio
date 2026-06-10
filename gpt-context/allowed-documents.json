@@ -1,0 +1,14 @@
+{
+  "documents": [
+    {
+      "id": "public-portfolio-index",
+      "title": "公開ポートフォリオ概要",
+      "path": "gpt-context/summaries/portfolio-index.md"
+    },
+    {
+      "id": "public-interview-knowledge-bridge",
+      "title": "Interview Knowledge Bridge",
+      "path": "gpt-context/summaries/interview-knowledge-bridge.md"
+    }
+  ]
+}
