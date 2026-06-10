@@ -1,13 +1,13 @@
 # Interview Knowledge Bridge
 
-Interview Knowledge Bridge は、KGPT（Custom GPT）からPrivate GitHubリポジトリ内の面接準備メモを安全に参照するための中継APIです。
+Interview Knowledge Bridge は、Custom GPT（Custom GPT）からPrivate GitHubリポジトリ内の面接準備メモを安全に参照するための中継APIです。
 
 ## 構成
 
-KGPT はPrivate GitHubリポジトリを直接参照せず、API Gateway と Lambda を経由して、許可済みのMarkdownのみ取得します。
+Custom GPT はPrivate GitHubリポジトリを直接参照せず、API Gateway と Lambda を経由して、許可済みのMarkdownのみ取得します。
 
 ```text
-KGPT
+Custom GPT
   ↓ Bearer Auth
 API Gateway
   ↓
@@ -27,7 +27,7 @@ GitHub fine-grained PAT
 Markdown
 Bearer認証
 実装したこと
-KGPT Actions からAPI Gateway経由でLambdaを呼び出す構成を作成
+Custom GPT Actions からAPI Gateway経由でLambdaを呼び出す構成を作成
 LambdaでBearer形式のBRIDGE_API_KEYを検証
 LambdaからGitHub APIを利用してPrivate repositoryを参照
 allowed-documents.json によるホワイトリスト制御を実装
