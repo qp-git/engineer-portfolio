@@ -2,62 +2,93 @@
 
 ## 概要
 
-Custom GPTからGitHub上の許可済みMarkdownを参照するための中継APIを構築しました。
+Interview Knowledge Bridge は、Custom GPTからGitHub上の許可済みMarkdownを参照するための中継APIです。
 
-Private Repositoryに整理した面接準備メモや、Public Repositoryに公開しているポートフォリオ情報を、Custom GPTから安全に参照できるようにすることを目的としています。
+自主学習で作成した成果物やプロジェクトの記録をGitHub上のMarkdownとして整理し、その内容をCustom GPTから参照できるようにすることを目的として構築しました。
 
-Custom GPTにGitHubの権限を直接持たせず、API GatewayとLambdaを中継させ、許可済みの文書のみ取得できる構成にしました。
+Custom GPTにGitHubの権限を直接持たせるのではなく、API GatewayとLambdaを中継させ、許可されたMarkdownだけを取得できる構成にしています。
 
-## 使用技術
+## 作成背景
 
-- Custom GPT Actions
-- OpenAPI schema
-- Amazon API Gateway
-- AWS Lambda
-- GitHub REST API
-- GitHub fine-grained PAT
-- Bearer認証
-- Markdown
+自主学習で作成したプロジェクトが増えると、READMEや各プロジェクトの説明、学んだこと、構成メモなどの情報が複数のMarkdownに分かれていきます。
+
+それらの情報をAIに参照させることができれば、成果物の整理、説明文の作成、学習内容の振り返りを効率化できます。
+
+一方で、Repository内のすべてのファイルをAIに自由に参照させるのではなく、参照してよいMarkdownだけを明示的に制御する必要があると考えました。
+
+そこで、Custom GPTとGitHubの間にAPI GatewayとLambdaを置き、許可されたMarkdownだけを取得できる仕組みを作りました。
+
+## できること
+
+* Custom GPTから許可済みMarkdownの一覧を取得する
+* Custom GPTから指定したMarkdown本文を取得する
+* GitHub上で管理しているポートフォリオ情報を参照する
+* 自主学習プロジェクトの説明や学習メモをAIの回答に活用する
+* 任意のファイルパス指定を避け、取得対象を文書IDで管理する
 
 ## 構成
 
-    Custom GPT
-      ↓ Bearer Auth
-    API Gateway
-      ↓
-    Lambda
-      ├─ GitHub Private Repository
-      └─ GitHub Public Repository
+```
+Custom GPT
+  ↓ Bearer Auth
+API Gateway
+  ↓
+Lambda
+  ↓
+GitHub Repository
+```
+
+Custom GPTは、API GatewayのURLにHTTPリクエストを送ります。
+
+API GatewayがLambdaを呼び出し、LambdaがGitHub APIを使ってMarkdownを取得します。
+
+取得したMarkdownは、LambdaからCustom GPTへ返します。
+
+## 使用技術
+
+* Custom GPT Actions
+* OpenAPI schema
+* Amazon API Gateway
+* AWS Lambda
+* GitHub REST API
+* GitHub fine-grained PAT
+* Bearer認証
+* Markdown
 
 ## 実装内容
 
-- Custom GPT ActionsからAPI Gateway経由でLambdaを呼び出す構成を作成
-- LambdaでBearer形式のAPIキーを検証
-- LambdaからGitHub APIを利用してMarkdownを取得
-- Public RepositoryとPrivate Repositoryの両方を参照対象に追加
-- allowed-documents.jsonによるホワイトリスト制御を実装
-- document_idベースで取得対象を制限し、任意パス指定を防止
+* Custom GPT ActionsからAPI Gateway経由でLambdaを呼び出す構成を作成
+* LambdaでBearer形式のAPIキーを検証
+* LambdaからGitHub APIを利用してMarkdownを取得
+* allowed-documents.jsonによるホワイトリスト制御を実装
+* document_idベースで取得対象を制限し、任意パス指定を防止
+* /health、/documents、/documents/{document_id} のエンドポイントを用意
 
-## 工夫した点
+## 設計で工夫した点
 
-LambdaはGitHub APIを呼び出す権限を持つため、権限上は参照対象のRepository内にあるファイルを読むことができます。
+このAPIでは、Custom GPTから直接GitHubのファイルパスを指定させないようにしました。
 
-そのため、API利用者から任意のファイルパスを受け取らず、allowed-documents.jsonに定義されたdocument_idのみ取得できる設計にしました。
+代わりに、Custom GPTは document_id という文書IDを指定します。
 
-これにより、Custom GPTにRepository全体を開放するのではなく、必要なMarkdownだけを参照させる構成にしています。
+Lambdaは allowed-documents.json を確認し、許可された document_id の場合だけ、対応するMarkdownファイルをGitHubから取得してCustom GPTへ返します。
+
+たとえば、Custom GPTが public-interview-knowledge-bridge という document_id を指定すると、Lambda側で対応するMarkdownファイルのパスに変換し、そのファイルだけを取得します。
+
+このようにすることで、Custom GPTにRepository全体を開放するのではなく、必要なMarkdownだけを参照できる構成にしました。
 
 ## 学び
 
-このプロジェクトで特に学びになったのは、AIエージェントから外部の情報を参照させる場合、単に中継APIを作るだけでは不十分だという点です。
+このプロジェクトで特に学びになったのは、AIに外部情報を参照させる仕組みでは、単に中継APIを作るだけでは不十分だという点です。
 
-LambdaはGitHub APIを呼び出すための権限を持つため、設計が甘いと、本来返すべきではない情報まで取得できてしまう可能性があります。
+LambdaはGitHub APIを呼び出すための権限を持つため、設計が甘いと、本来返すべきではない情報まで取得・返却できてしまう可能性があります。
 
 そのため、Lambdaを単なる中継役ではなく、認証・認可・取得対象制御を行う門番として設計しました。
 
-具体的には、API利用者から任意のファイルパスを受け取らず、document_idのみを受け取り、allowed-documents.jsonで許可されたMarkdownだけを返す構成にしました。
-
 この経験を通して、AIエージェントに外部情報を参照させる仕組みでは、利便性だけでなく、どの情報を返してよいかを制御する設計が重要だと学びました。
+
+また、この考え方はCustom GPTに限らず、別のAIエージェントやナレッジ参照ツールにも応用できると感じました。
 
 ## リポジトリ
 
-- https://github.com/qp-git/interview-knowledge-bridge
+* https://github.com/qp-git/interview-knowledge-bridge
+
