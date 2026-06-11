@@ -6,6 +6,21 @@
       "path": "gpt-context/summaries/portfolio-index.md"
     },
     {
+      "id": "public-odaibox",
+      "title": "OdaiBox",
+      "path": "gpt-context/summaries/odaibox.md"
+    },
+    {
+      "id": "public-stt-ecs",
+      "title": "STT + ECS",
+      "path": "gpt-context/summaries/stt-ecs.md"
+    },
+    {
+      "id": "public-alexa-skill",
+      "title": "Alexa Skill",
+      "path": "gpt-context/summaries/alexa-skill.md"
+    },
+    {
       "id": "public-interview-knowledge-bridge",
       "title": "Interview Knowledge Bridge",
       "path": "gpt-context/summaries/interview-knowledge-bridge.md"
