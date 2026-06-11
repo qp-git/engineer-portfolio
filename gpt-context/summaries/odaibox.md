@@ -2,59 +2,59 @@
 
 ## 概要
 
-OdaiBoxは、Discordで `/odai` を実行すると、ゲーム用のお題をランダムに返すBot。
+OdaiBoxは、Discordで通話しながらゲームをするコミュニティ向けに、お題をランダムに出すBotです。
 
-単なるランダム抽選ではなく、非エンジニアでもWeb管理画面からお題を追加・編集・ON/OFFできるようにした点が特徴。
+Discordで `/odai` を実行すると、次の試合で使うお題をランダムに返します。
+
+単なるランダム抽選ではなく、非エンジニアでもWeb管理画面からお題を追加・編集・ON/OFFできるようにした点が特徴です。
+
+## 作成背景
+
+Discordで通話しながらゲームをするとき、同じ遊び方が続くとマンネリ化しやすい課題がありました。
+
+コミュニティ内で毎回お題を考えるのではなく、Botによってランダムにお題を出すことで、遊び方に変化をつけることを目的としました。
+
+また、お題をLambdaのコード内に固定すると、変更のたびに開発者が修正・デプロイする必要があります。
+
+そのため、利用者側でDiscordサーバー（コミュニティ）の雰囲気に合わせてお題を管理できるWeb管理画面を重視しました。
 
 ## 使用技術
 
+- Discord Slash Commands
+- Discord Interaction
 - AWS Lambda
 - Amazon API Gateway
 - Amazon DynamoDB
 - Amazon S3
 - Amazon CloudFront
-- Discord API
-- Discord Slash Commands
-- GitHub Actions
-- JavaScript / HTML / CSS
+- HTML / CSS / JavaScript
 
-## 構成
+## 構成概要
 
-    Discord
-      ↓ /odai
-    API Gateway
-      ↓
-    Lambda
-      ↓
-    DynamoDB
+主な処理は、Discordコマンドからのお題取得と、Web管理画面からのお題編集です。
 
-    Browser
-      ↓
-    CloudFront
-      ↓
-    S3
-
-    Admin UI
-      ↓ 保存・編集
-    API Gateway
-      ↓
-    Lambda
-      ↓
-    DynamoDB
+詳しい通信経路は `projects/odaibox/architecture.md` に整理しています。
 
 ## 実装内容
 
 - `/odai` コマンドでランダムなお題を返すBotを作成
-- DynamoDBでサーバーごとのお題を管理
+- DynamoDBでDiscordサーバー（コミュニティ）ごとのお題を管理
 - Web管理画面からお題の追加・編集・ON/OFFを可能にした
 - S3 + CloudFrontで管理画面を静的配信
 - `/admin-login` による一時パスワード方式を検討・実装
 - 保存する情報と保存しない情報を整理し、プライバシーポリシーを作成
 
-## 学び
+## 特に強調したい学び
 
-- サーバーレス構成は、常時起動が不要なBotに向いている
-- コード内固定データではなくDynamoDBと管理UIに分けると、非エンジニアでもカスタムしやすい
-- 管理画面を作る場合は、表示できることと編集できることを分けて考える必要がある
-- 個人開発でも、サーバーIDやユーザーIDの扱い、保存する情報、保存しない情報を説明する必要がある
-- 技術的に正しいだけでなく、利用者に伝わる説明の粒度も重要
+このプロジェクトで特に重要なのは、Bot本体だけでなく、利用者が操作するWeb管理画面を用意すると、認証・認可・プライバシー説明も設計対象になると学んだ点です。
+
+お題をコード内に固定するだけであれば構成は単純です。しかし、利用者がブラウザからお題を追加・編集できるようにすると、誰が管理画面を操作できるのか、どのDiscordサーバー（コミュニティ）のお題を編集できるのか、どの情報を保存するのかを明確にする必要があります。
+
+そのため、`/admin-login` による一時ログイン方式や、保存する情報・保存しない情報を整理したプライバシーポリシーを用意しました。
+
+## 関連ドキュメント
+
+- `projects/odaibox/README.md`
+- `projects/odaibox/architecture.md`
+- `projects/odaibox/design-decisions.md`
+- `projects/odaibox/privacy-policy.md`
