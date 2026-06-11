@@ -1,55 +1,155 @@
-# OdaiBox Architecture
+# OdaiBox 構成メモ
 
-## Component overview
+OdaiBox は、Discord 上で `/odai` を実行すると、ゲーム用のお題をランダムに返す Bot です。
 
-| Component | Role |
+サーバーごとにお題をカスタムできるようにするため、Discord Bot 本体だけでなく、Web 管理画面も用意しています。
+
+## 全体構成
+
+OdaiBox には、大きく分けて3つの処理ルートがあります。
+
+1. Discord からお題を取得するルート
+2. Web 管理画面を表示するルート
+3. Web 管理画面からお題を追加・編集するルート
+
+### お題取得
+
+```text
+Discord
+  ↓ /odai
+API Gateway
+  ↓
+Lambda
+  ↓
+DynamoDB
+```
+
+### 管理画面表示
+
+```text
+利用者のブラウザ
+  ↓
+CloudFront
+  ↓
+S3
+```
+
+### 管理画面からの保存・編集
+
+```text
+管理画面
+  ↓ 保存・編集
+API Gateway
+  ↓
+Lambda
+  ↓
+DynamoDB
+```
+
+## 使用サービス
+
+| サービス | 役割 |
 |---|---|
-| Discord | `/odai` や `/admin-login` などのスラッシュコマンドを実行するユーザー接点 |
-| API Gateway | Discordおよび管理画面からのHTTPリクエストを受ける入口 |
-| Lambda | コマンド処理、お題抽選、管理画面ログイン、DynamoDB更新を担当 |
-| DynamoDB | サーバーごとのお題データ、ON/OFF状態、一時ログイン情報を保存 |
-| S3 | 管理画面のHTML/CSS/JavaScriptを保存 |
-| CloudFront | 管理画面をHTTPSで配信 |
-| IAM | LambdaやGitHub Actionsの権限を制御 |
+| Discord | ユーザーが `/odai` や `/admin-login` を実行する入口 |
+| API Gateway | Discord や管理画面からのHTTPリクエストを受ける入口 |
+| Lambda | お題抽選、管理画面ログイン、保存・編集処理を行う |
+| DynamoDB | お題データ、サーバー設定、一時ログイン情報を保存する |
+| S3 | 管理画面のHTML / CSS / JavaScriptを配置する |
+| CloudFront | 管理画面をブラウザへ配信する |
+| GitHub Actions | Lambdaや静的ファイルの更新を自動化する |
 
-## Request flow: `/odai`
+## `/odai` 実行時の流れ
 
-```text
-1. User runs /odai in Discord
-2. Discord sends an interaction request to API Gateway
-3. API Gateway invokes Lambda
-4. Lambda validates the request and reads challenge data from DynamoDB
-5. Lambda selects one challenge
-6. Lambda returns a response to Discord
-7. Discord displays the challenge in chat
-```
+ユーザーが Discord で `/odai` を実行すると、Discord から API Gateway へリクエストが送られます。
 
-## Request flow: admin login
+1. ユーザーが Discord で `/odai` を実行
+2. Discord が API Gateway へリクエストを送信
+3. API Gateway が Lambda を呼び出す
+4. Lambda が DynamoDB から対象サーバーのお題を取得
+5. Lambda が条件に合うお題をランダムに選ぶ
+6. Lambda が Discord へレスポンスを返す
+7. Discord のチャットにお題が表示される
 
-```text
-1. Authorized user runs /admin-login in Discord
-2. Lambda checks the user's Discord-side permission
-3. Lambda generates a temporary password
-4. Lambda stores the password with guild_id and expiration time in DynamoDB
-5. User enters the temporary password in the admin UI
-6. Admin UI sends the password to API Gateway
-7. Lambda validates expiration and guild_id
-8. Admin UI operations are allowed
-```
+この構成により、常時起動するサーバーを持たず、コマンド実行時だけ Lambda が動く形にしています。
 
-## Request flow: admin UI edit
+## 管理画面表示の流れ
 
-```text
-1. User edits challenge data in the admin UI
-2. Browser sends a request to API Gateway
-3. Lambda validates the temporary login state
-4. Lambda updates DynamoDB
-5. Admin UI shows updated challenge data
-```
+管理画面は静的ファイルとして S3 に配置し、CloudFront 経由で配信します。
 
-## Design notes
+1. 管理者がブラウザで管理画面を開く
+2. CloudFront がリクエストを受ける
+3. S3 から HTML / CSS / JavaScript を取得
+4. ブラウザに管理画面を表示する
 
-- 管理画面は静的配信のため、画面表示そのものを認可とは見なさない
-- 編集操作はAPI側で検証する
-- サーバーIDを使い、Discordサーバーごとにお題データを分離する
-- 音声やチャット本文は扱わない
+管理画面の表示だけであれば、Webサーバーを常時起動する必要はありません。
+
+## 管理画面からの保存・編集
+
+管理画面でお題を追加・編集・ON/OFF切り替えすると、ブラウザから API Gateway 経由で Lambda にリクエストを送ります。
+
+1. 管理者が管理画面でお題を編集する
+2. ブラウザが API Gateway へ保存リクエストを送信
+3. API Gateway が Lambda を呼び出す
+4. Lambda がログイン状態や対象サーバーを確認
+5. Lambda が DynamoDB のお題データを更新する
+6. 更新結果を管理画面へ返す
+
+この構成により、非エンジニアでもブラウザ上からお題を管理できます。
+
+## 管理画面ログインの流れ
+
+管理画面を誰でも編集できる状態にはしないため、Discord の `/admin-login` コマンドで一時パスワードを発行する構成にしています。
+
+1. 権限のあるユーザーが Discord で `/admin-login` を実行
+2. Discord が API Gateway へリクエストを送る
+3. Lambda が対象ユーザーの権限を確認する
+4. Lambda が一時パスワードを発行する
+5. 一時パスワードを DynamoDB に保存する
+6. ユーザーが管理画面で一時パスワードを入力する
+7. Lambda が有効期限と対象サーバーを確認する
+8. 問題なければ管理画面操作を許可する
+
+固定の共通パスワードを配るのではなく、Discord 側の権限確認を使って管理画面ログインにつなげています。
+
+## データの持ち方
+
+DynamoDB では、主に以下の情報を扱います。
+
+| データ | 用途 |
+|---|---|
+| お題データ | サーバーごとのカスタムお題を保存する |
+| 有効 / 無効状態 | 出題対象のお題を制御する |
+| サーバー ID | Discord サーバーごとに設定を分ける |
+| ユーザー ID | お題履歴や管理操作の確認に利用する |
+| 一時ログイン情報 | 管理画面ログインを制御する |
+| お題履歴 | 同じお題が続きにくくする |
+
+音声通話、チャット本文、DM、Discord のパスワードは保存しません。
+
+## 低コスト構成にした理由
+
+OdaiBox は、常時接続が必要な Bot ではありません。
+
+`/odai` や `/admin-login` が実行されたときだけ処理できればよいため、常時起動のEC2ではなく、Lambda中心のサーバーレス構成にしています。
+
+管理画面も S3 + CloudFront で静的配信することで、Webサーバーを起動し続けない構成にしています。
+
+この構成により、小規模なDiscordサーバーであれば低コストで運用しやすくなります。
+
+## セキュリティ上の境界
+
+OdaiBoxでは、以下の境界を意識しています。
+
+- Discordからのリクエスト
+- 管理画面からのリクエスト
+- 管理者として操作できるユーザー
+- サーバーごとのお題データ
+- 一時ログイン情報
+- 保存する情報と保存しない情報
+
+特に管理画面は、URLを知っているだけで誰でも編集できる状態にしないよう、`/admin-login` による一時ログイン方式にしています。
+
+## 関連ドキュメント
+
+- [設計判断メモ](./design-decisions.md)
+- [プライバシーポリシー](./privacy-policy.md)
