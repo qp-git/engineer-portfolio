@@ -22,3 +22,10 @@ Thumbs.db
 
 # Generated archives
 *.zip
+
+# Editor swap files
+*.swp
+.*.swp
+
+# Windows downloaded file metadata
+*:Zone.Identifier
