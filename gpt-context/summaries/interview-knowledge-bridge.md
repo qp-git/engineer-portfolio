@@ -1,49 +1,56 @@
 # Interview Knowledge Bridge
 
-Interview Knowledge Bridge は、Custom GPT（Custom GPT）からPrivate GitHubリポジトリ内の面接準備メモを安全に参照するための中継APIです。
+## 概要
+
+Interview Knowledge Bridge は、Custom GPTからGitHub上の許可済みMarkdownを参照するための中継APIです。
+
+公開ポートフォリオ情報と、非公開の面接準備メモをCustom GPTから参照できるようにしつつ、参照できる文書をホワイトリストで制限することを目的としています。
 
 ## 構成
 
-Custom GPT はPrivate GitHubリポジトリを直接参照せず、API Gateway と Lambda を経由して、許可済みのMarkdownのみ取得します。
+    Custom GPT
+      ↓ Bearer Auth
+    API Gateway
+      ↓
+    Lambda
+      ├─ GitHub Public Repository
+      └─ GitHub Private Repository
 
-```text
-Custom GPT
-  ↓ Bearer Auth
-API Gateway
-  ↓
-Lambda
-  ↓ GitHub API
-GitHub Private Repository
+## 使用技術
 
+- Custom GPT Actions
+- OpenAPI schema
+- Amazon API Gateway
+- AWS Lambda
+- GitHub REST API
+- GitHub fine-grained PAT
+- Bearer認証
+- Markdown
 
+## 実装内容
 
-使用技術
-ChatGPT Custom GPT Actions
-OpenAPI schema
-Amazon API Gateway
-AWS Lambda
-GitHub REST API
-GitHub fine-grained PAT
-Markdown
-Bearer認証
-実装したこと
-Custom GPT Actions からAPI Gateway経由でLambdaを呼び出す構成を作成
-LambdaでBearer形式のBRIDGE_API_KEYを検証
-LambdaからGitHub APIを利用してPrivate repositoryを参照
-allowed-documents.json によるホワイトリスト制御を実装
-document_id ベースで取得対象を制限し、任意パス指定を防止
-学び
+- Custom GPT ActionsからAPI Gateway経由でLambdaを呼び出す構成を作成
+- LambdaでBearer形式のAPIキーを検証
+- LambdaからGitHub APIを呼び出してMarkdownを取得
+- Public RepositoryとPrivate Repositoryの両方を参照対象に追加
+- allowed-documents.jsonで許可済み文書のみ返すように制御
+- document_idベースで文書を取得し、任意パス指定を防止
 
-LambdaはGitHub PATを持つため、権限上はPrivate repository内のファイルを読むことができます。
-そのため、API利用者へ何を返すかはLambda側の実装で制御する必要があります。
+## 工夫した点
 
-今回の構成では、allowed-documents.json に定義された document_id のみを取得対象とし、API利用者が任意のファイルパスを指定できないようにしました。
+Custom GPTにGitHubの権限を直接持たせず、API GatewayとLambdaを中継させる構成にしました。
 
-ただし、Lambdaコードに不備があると、PATの権限内で本来返すべきでないファイルを返してしまうリスクがあります。
-そのため、任意パスを受け取らない設計、取得可能なディレクトリ制限、拡張子制限が重要だと学びました。
+LambdaはGitHub PATを持つため、Private Repository内のファイルを読む権限があります。そのため、API利用者から任意のファイルパスを受け取らず、allowed-documents.jsonに定義されたdocument_idのみ取得できるようにしました。
 
-今後の改善案
-GitHub PATをSecrets Managerへ移行
-GitHub App方式への変更
-CloudWatch Logsの整理
-Public repository側のポートフォリオ情報も参照対象に追加
+これにより、Custom GPTにPrivate Repository全体を開放せず、必要なMarkdownだけを参照できる構成にしています。
+
+## 学び
+
+API Gatewayを外部公開の入口として使い、LambdaをHTTP APIとして呼び出す構成を学びました。
+
+また、APIキーによる認証だけでなく、認証後にどの文書を返してよいかを制御する認可設計の重要性を学びました。
+
+## 公開用リンク
+
+- Portfolio page: ./projects/interview-knowledge-bridge.md
+- Repository: https://github.com/qp-git/interview-knowledge-bridge
