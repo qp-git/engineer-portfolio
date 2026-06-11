@@ -39,3 +39,13 @@ API Gateway、Lambda、GitHub API、OpenAPI schemaを使い、許可済みMarkdo
 ## 今後追加予定
 
 - Spotify API連携プロジェクト
+
+## AI / Custom GPT向け要約
+
+AIやCustom GPTから参照しやすいように、各プロジェクトの要約を `gpt-context/summaries/` に整理しています。
+
+- [ポートフォリオ概要](./gpt-context/summaries/portfolio-index.md)
+- [OdaiBox](./gpt-context/summaries/odaibox.md)
+- [STT + ECS](./gpt-context/summaries/stt-ecs.md)
+- [Alexa Skill](./gpt-context/summaries/alexa-skill.md)
+- [Interview Knowledge Bridge](./gpt-context/summaries/interview-knowledge-bridge.md)
