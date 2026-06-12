@@ -2,108 +2,77 @@
 
 ## 概要
 
-Interview Knowledge Bridge は、Custom GPTからGitHub上の許可済みMarkdownを参照するための中継APIです。
+Interview Knowledge Bridge は、Custom GPT から GitHub 上の許可済み Markdown を参照できるようにするための中継 API です。
 
-自主学習で作成した成果物やプロジェクトの記録をGitHub上のMarkdownとして整理し、その内容をCustom GPTから参照できるようにすることを目的として構築しました。
+公開ポートフォリオは人間が読みやすいように整理し、細かい躓きや判断理由、面接で深掘りされたときの補足情報は、AI 面接官向けの詳細コンテキストとして分けて管理します。
 
-Custom GPTにGitHubの権限を直接持たせるのではなく、API GatewayとLambdaを中継させ、許可されたMarkdownだけを取得できる構成にしています。
+この API では、GitHub 上のすべてのファイルを AI に参照させるのではなく、面接練習や回答生成に使ってよい Markdown だけをホワイトリストで管理します。これにより、Custom GPT が参照する情報の範囲を明確にし、関係ないファイルや冗長な情報が混ざることを防ぎます。
 
 ## 作成背景
 
-自主学習で作成したプロジェクトが増えると、READMEや各プロジェクトの説明、学んだこと、構成メモなどの情報が複数のMarkdownに分かれていきます。
+ポートフォリオを整理していく中で、人間に見せる公開資料と、AI に参照させたい詳細な補足情報は役割が異なると感じました。
 
-それらの情報をAIに参照させることができれば、成果物の整理、説明文の作成、学習内容の振り返りを効率化できます。
+公開資料では、初見の人が読みやすいように概要、構成、設計判断、学びを簡潔にまとめる必要があります。一方で、面接練習では、実際に詰まった点、なぜその構成にしたか、他の選択肢をどう考えたか、今ならどう改善するかといった細かい情報も役立ちます。
 
-一方で、Repository内のすべてのファイルをAIに自由に参照させるのではなく、参照してよいMarkdownだけを明示的に制御する必要があると考えました。
+そこで、公開ポートフォリオとは別に、AI 面接官が参照するための詳細コンテキストを Markdown として管理し、Custom GPT から必要な文書だけ取得できる中継 API を作成しました。
 
-そこで、Custom GPTとGitHubの間にAPI GatewayとLambdaを置き、許可されたMarkdownだけを取得できる仕組みを作りました。
+## 目的
 
-## できること
+このプロジェクトの目的は、Custom GPT に対して、参照してよい情報だけを明示的に渡すことです。
 
-* Custom GPTから許可済みMarkdownの一覧を取得する
-* Custom GPTから指定したMarkdown本文を取得する
-* GitHub上で管理しているポートフォリオ情報を参照する
-* 自主学習プロジェクトの説明や学習メモをAIの回答に活用する
-* 任意のファイルパス指定を避け、取得対象を文書IDで管理する
+主な目的は以下です。
 
-## 構成
+- 人間向けの公開ポートフォリオと、AI 面接官向けの詳細コンテキストを分ける
+- Custom GPT が参照できる Markdown をホワイトリストで制御する
+- 面接回答に使ってよい情報だけを API 経由で返す
+- 関係ないファイルやノイズの多い情報を AI に読ませない
+- 将来的に公開メモと非公開メモが混在しても、同じ仕組みで参照範囲を管理できるようにする
 
-```
-Custom GPT
-  ↓ Bearer Auth
-API Gateway
-  ↓
-Lambda
-  ↓
-GitHub Repository
-```
+## 構成の概要
 
-Custom GPTは、API GatewayのURLにHTTPリクエストを送ります。
+基本的な流れは以下です。
 
-API GatewayがLambdaを呼び出し、LambdaがGitHub APIを使ってMarkdownを取得します。
+    Custom GPT
+      ↓ Actions 経由でリクエスト
+    Bridge API
+      ↓ 許可済みドキュメントか確認
+    Whitelist
+      ↓ 対象 Markdown を取得
+    GitHub Repository
+      ↓ Markdown を返却
+    Custom GPT
 
-取得したMarkdownは、LambdaからCustom GPTへ返します。
+Bridge API は、Custom GPT からのリクエストを受け取り、ホワイトリストに登録された Markdown だけを取得して返します。
 
-## 使用技術
+## 使用技術・要素
 
-* Custom GPT Actions
-* OpenAPI schema
-* Amazon API Gateway
-* AWS Lambda
-* GitHub REST API
-* GitHub fine-grained PAT
-* Bearer認証
-* Markdown
+- Custom GPT Actions
+- OpenAPI schema
+- HTTP API
+- GitHub 上の Markdown
+- ホワイトリストによる参照制御
 
-## 実装内容
+## 実装・検証したこと
 
-* Custom GPT ActionsからAPI Gateway経由でLambdaを呼び出す構成を作成
-* LambdaでBearer形式のAPIキーを検証
-* LambdaからGitHub APIを利用してMarkdownを取得
-* allowed-documents.jsonによるホワイトリスト制御を実装
-* document_idベースで取得対象を制限し、任意パス指定を防止
-* /health、/documents、/documents/{document_id} のエンドポイントを用意
+- Custom GPT から外部 API を呼び出す構成を検証
+- API 経由で GitHub 上の Markdown を取得する流れを整理
+- 参照可能な Markdown をホワイトリストで制御
+- AI が読む情報を、人間向けの公開ポートフォリオとは別に管理
+- 面接練習で必要な補足情報を、必要なときだけ取得できる構成を検討
 
-## 設計で工夫した点
+## このプロジェクトで学んだこと
 
-このAPIでは、Custom GPTから直接GitHubのファイルパスを指定させないようにしました。
+このプロジェクトでは、AI に情報を渡す場合、単にデータを置いておくだけでなく、どの情報を読ませるかを設計する必要があると学びました。
 
-代わりに、Custom GPTは document_id という文書IDを指定します。
+特に、面接練習用の AI では、公開ポートフォリオのように読みやすく整理された情報だけでなく、細かい躓きや判断理由、補足説明も回答の材料になります。一方で、すべての情報を読ませると、関係ない情報や冗長な内容が混ざり、回答の精度が下がる可能性があります。
 
-Lambdaは allowed-documents.json を確認し、許可された document_id の場合だけ、対応するMarkdownファイルをGitHubから取得してCustom GPTへ返します。
+そのため、AI が参照する文書をホワイトリストで管理し、必要な情報だけを API 経由で渡す構成にしました。
 
-たとえば、Custom GPTが public-interview-knowledge-bridge という document_id を指定すると、Lambda側で対応するMarkdownファイルのパスに変換し、そのファイルだけを取得します。
-
-このようにすることで、Custom GPTにRepository全体を開放するのではなく、必要なMarkdownだけを参照できる構成にしました。
-
-## 学び
-
-このプロジェクトで特に学びになったのは、AIに外部情報を参照させる仕組みでは、単に中継APIを作るだけでは不十分だという点です。
-
-LambdaはGitHub APIを呼び出すための権限を持つため、設計が甘いと、本来返すべきではない情報まで取得・返却できてしまう可能性があります。
-
-そのため、Lambdaを単なる中継役ではなく、認証・認可・取得対象制御を行う門番として設計しました。
-
-この経験を通して、AIエージェントに外部情報を参照させる仕組みでは、利便性だけでなく、どの情報を返してよいかを制御する設計が重要だと学びました。
-
-また、この考え方はCustom GPTに限らず、別のAIエージェントやナレッジ参照ツールにも応用できると感じました。
-
-## リポジトリ
-
-* https://github.com/qp-git/interview-knowledge-bridge
-
-## このプロジェクトで特に学んだこと
-
-このプロジェクトで特に大きかった学びは、AIに情報を参照させる場合でも、単にRepository全体を読ませるのではなく、参照できる範囲を設計する必要があるという点です。
-
-Custom GPTにGitHub Tokenを直接持たせるのではなく、API GatewayとLambdaを中継させ、`allowed-documents.json` に登録したMarkdownだけを取得できる構成にしました。
-
-また、ファイルパスを直接指定するのではなく、`document_id` を使って取得対象を管理することで、AIが参照できる文書を明示的に制御できるようにしました。
-
-この構成により、公開用のポートフォリオ情報と、面接深掘り用の非公開メモを分けつつ、Custom GPTから必要な情報だけを参照できる仕組みを作れました。
+この経験から、AI 活用では、モデルそのものだけでなく、参照させる情報の粒度、範囲、管理方法も重要な設計対象になると学びました。
 
 ## 関連ドキュメント
 
-- [構成メモ](./architecture.md)
+- [アーキテクチャ](./architecture.md)
+  - Custom GPT、Bridge API、ホワイトリスト、GitHub Markdown の関係
 - [設計判断メモ](./design-decisions.md)
-
+  - なぜ中継 API にしたか、なぜホワイトリスト制御にしたか
