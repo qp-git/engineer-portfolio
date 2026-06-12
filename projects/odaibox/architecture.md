@@ -158,11 +158,5 @@ OdaiBoxでは、以下の情報は保存しません。
 
 Lambdaの実装では、Discord署名検証、スラッシュコマンドごとのルーティング、お題抽選、一時ログイン情報の検証、管理画面APIの処理を行っています。
 
-代表的なコードの抜粋は [Lambdaコード解説](./docs/lambda-code-notes.md) に整理しています。
-
-## Lambdaコード解説
-
-Lambda内の処理、DynamoDB操作、抽選ロジックの一部を、コード抜粋つきで整理しています。
-
-- [Lambdaコード解説](./docs/lambda-code-notes.md)
+コード全体ではなく代表的な処理だけを抜粋し、処理の意図が分かるように [Lambdaコード解説](./docs/lambda-code-notes.md) に整理しています。
 
