@@ -34,7 +34,7 @@ Alexaスキルを題材に、音声UIとAWS Lambda、外部API連携を学習し
 
 Custom GPT から、GitHub 上の許可済み Markdown だけを取得できるようにする中継 API です。
 
-公開ポートフォリオには載せにくい細かな躓き、判断理由、面接で深掘りされたときの補足メモを、面接練習用の詳細コンテキストとして分けて管理します。API Gateway、Lambda、GitHub API、OpenAPI schema を使い、AI が参照する情報の範囲をホワイトリストで制御する構成を検証しました。
+公開ポートフォリオには載せにくい細かな躓き、判断理由、公開資料には載せにくい細かな躓きや判断理由を、AI に渡す補助コンテキストとして分けて管理します。API Gateway、Lambda、GitHub API、OpenAPI schema を使い、AI が参照する情報の範囲をホワイトリストで制御する構成を検証しました。
 
 - [詳細](./projects/interview-knowledge-bridge/)
 ## 今後追加予定
