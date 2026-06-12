@@ -32,11 +32,13 @@ Alexaスキルを題材に、音声UIとAWS Lambda、外部API連携を学習し
 
 ### 4. Interview Knowledge Bridge
 
-Custom GPT から、GitHub 上の許可済み Markdown だけを取得できるようにする中継 API です。
+Custom GPT から、Private GitHub リポジトリ上の許可済み Markdown を参照できるようにする中継 API です。
 
-公開ポートフォリオには載せにくい細かな躓き、判断理由、公開資料には載せにくい細かな躓きや判断理由を、AI に渡す補助コンテキストとして分けて管理します。API Gateway、Lambda、GitHub API、OpenAPI schema を使い、AI が参照する情報の範囲をホワイトリストで制御する構成を検証しました。
+公開ポートフォリオには人間向けに整理した概要や設計判断を置き、Private リポジトリにはより細かいコード解説、制作背景、判断理由、作業中の補足メモを残しています。AI にプロジェクト全体の把握や整理を補助させるため、`document_id` や `project_id` によるホワイトリスト制御で、必要な Markdown だけを取得できる構成を検証しました。
 
-- [詳細](./projects/interview-knowledge-bridge/)
+* [詳細](./projects/interview-knowledge-bridge/)
+* [実装リポジトリ](https://github.com/qp-git/private-interview-knowledge-bridge)
+
 ## 今後追加予定
 
 - Spotify API連携プロジェクト
