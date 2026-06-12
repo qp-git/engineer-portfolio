@@ -32,24 +32,13 @@ Alexaスキルを題材に、音声UIとAWS Lambda、外部API連携を学習し
 
 - [詳細](./projects/alexa-skill/)
 
-### Interview Knowledge Bridge
+### 4. Interview Knowledge Bridge
 
-Custom GPT から、GitHub 上の許可済み Markdown だけを参照できるようにするための中継 API です。
+Custom GPT から、GitHub 上の許可済み Markdown だけを取得できるようにする中継 API です。
 
-人間向けの公開ポートフォリオと、AI 面接官向けの詳細コンテキストを分けて管理し、面接練習や回答生成に使ってよい情報だけをホワイトリストで制御する構成を検証しました。
+公開ポートフォリオには載せにくい細かな躓き、判断理由、面接で深掘りされたときの補足メモを、面接練習用の詳細コンテキストとして分けて管理します。API Gateway、Lambda、GitHub API、OpenAPI schema を使い、AI が参照する情報の範囲をホワイトリストで制御する構成を検証しました。
 
-- [詳細](./projects/interview-knowledge-bridge/README.md)
-## AI / Custom GPT向け要約
-
-AIやCustom GPTから参照しやすいように、各プロジェクトの要約を `gpt-context/summaries/` に整理しています。
-
-- [ポートフォリオ概要](./gpt-context/summaries/portfolio-index.md)
-- [OdaiBox](./gpt-context/summaries/odaibox.md)
-- [STT + ECS](./gpt-context/summaries/stt-ecs.md)
-- [Alexa Skill](./gpt-context/summaries/alexa-skill.md)
-- [Interview Knowledge Bridge](./gpt-context/summaries/interview-knowledge-bridge.md)
-
+- [詳細](./projects/interview-knowledge-bridge/)
 ## 今後追加予定
 
 - Spotify API連携プロジェクト
-
