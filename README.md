@@ -17,8 +17,6 @@ Discord向けのお題Botです。AWS Lambda、API Gateway、DynamoDB、S3、Clo
 
 ### 2. STT + ECS
 
-### 2. STT + ECS
-
 STT（Speech to Text、音声をテキスト化する処理）を使い、録音した音声を文字起こしして要約するWebアプリを作成したプロジェクトです。ブラウザで録音した音声をFlaskバックエンドへ送り、OpenAI APIで文字起こしと要約を行う構成を検証しました。
 
 また、この自作アプリをDockerコンテナ化し、ECR、ECS、ALBを使ってAWS上で動かす流れも確認しました。AI APIを使うアプリをECS上で扱う中で、コンテナ実行、ヘルスチェック、タスク定義、Secrets Manager、IAM権限、HTTPS化、ロールバックまでを整理しています。
