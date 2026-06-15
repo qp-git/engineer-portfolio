@@ -94,7 +94,7 @@
 |---|---|
 | [OdaiBox](./projects/odaibox/) | Lambda、DynamoDB、API Gateway、S3、CloudFront、Discord Bot、管理UI、認証設計、プライバシーポリシー |
 | [STT + ECS](./projects/stt-ecs/) | Flask、OpenAI API、STT、Docker、ECS、ALB、HTTPS、Secrets Manager、タスク定義、ロールバック |
-| [Alexa Skill](./projects/alexa-skill/) | Alexa Custom Skill、Lambda、外部API、環境変数、CloudWatch Logs、部分失敗設計 |
+| [Alexa Skill](./projects/alexa-skill/) | Alexa Custom Skill、Lambda直接連携、音声UI向けレスポンス設計、外部API、CloudWatch Logs、部分失敗設計 |
 | [Interview Knowledge Bridge](./projects/interview-knowledge-bridge/) | Custom GPT Actions、OpenAPI、API Gateway、Lambda、GitHub API、Bearer認証、Allowlist設計 |
 | dev-marathon | Node.js、Nginx、PostgreSQL、Playwright、Cypress、PM2、E2Eテスト、負荷試験 |
 | リプレイス演習 | Amazon Linux 2 から Amazon Linux 2023、ALB、Web/AP/DB、移行、検証、チームリーダー |
