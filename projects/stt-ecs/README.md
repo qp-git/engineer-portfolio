@@ -110,7 +110,7 @@ AWS上では、FlaskアプリをDockerイメージ化し、ECRに保存したイ
 
 - [再開手順](./restart-guide.md): 料金対策で削除したAWSリソースを再作成し、検証を再開するための手順を整理しています。
 - [CI/CD比較](./cicd-comparison.md): GitHub ActionsとAWS CodePipeline / CodeBuildを比較し、IAM権限、Secrets管理、ECR/ECS連携の観点を整理しています。
-
+- [CodePipeline実装計画](./codepipeline-plan.md): AWS CodePipeline / CodeBuild / ECR / ECSを使ったCI/CD検証の構成案、IAM権限、Secrets管理、コスト面の注意点を整理しています。
 ## 関連記事
 
 Qiita記事は準備中です。
