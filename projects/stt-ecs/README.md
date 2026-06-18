@@ -107,6 +107,7 @@ AWS上では、FlaskアプリをDockerイメージ化し、ECRに保存したイ
 - [設計判断メモ](./design-decisions.md)
   - なぜこの題材・構成にしたか、Docker / ECS / AI API の観点で整理した設計理由
 
+- [再開手順](./restart-guide.md): 料金対策で削除したAWSリソースを再作成し、検証を再開するための手順を整理しています。
 
 ## 関連記事
 
