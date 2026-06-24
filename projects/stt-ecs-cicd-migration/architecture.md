@@ -1,5 +1,13 @@
 # Architecture
 
+## 位置づけ
+
+このアーキテクチャは、STT + ECS本体の新規構築ではなく、既存のSTT + ECSアプリに対するCI/CD基盤移行フェーズを示すものです。
+
+親プロジェクトであるSTT + ECSでは、AI音声文字起こしアプリをECS、ALB、Secrets Manager上で動かす構成を整理しています。
+
+このPhase 2では、その既存アプリに対して、GitHub Actions経路とCodePipeline経路を分離し、段階的に本番入口を切り替えました。
+
 ## 移行前
 
 移行前は、GitHub Actionsによるデプロイ経路でECS Serviceを更新していました。

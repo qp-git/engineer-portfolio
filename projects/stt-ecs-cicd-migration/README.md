@@ -1,8 +1,26 @@
-# STT + ECS CI/CD基盤移行
+# STT + ECS / Phase 2: CI/CD基盤移行
+
+## 位置づけ
+
+このプロジェクトは、`STT + ECS` の続編です。
+
+アプリ本体を新しく作ったものではなく、既存のSTT + ECSアプリを対象に、CI/CD基盤をGitHub ActionsからAWS CodePipeline / CodeBuildへ段階移行した運用改善フェーズです。
+
+大きなテーマは、AI音声文字起こしアプリをAWS ECS上で安全に運用することです。
+
+- Phase 1: STT + ECS
+  - AI音声文字起こしアプリ本体
+  - Docker / ECS / ALB / Secrets Manager / HTTPS
+- Phase 2: STT + ECS CI/CD基盤移行
+  - GitHub ActionsからCodePipeline / CodeBuildへの移行
+  - Target Group分離
+  - ALB Listenerによる段階検証
+  - ALB Fixed responseによる切替時のメンテナンス表示
+  - 本番URL Smoke Test
 
 ## 概要
 
-STT + ECSプロジェクトの続編として、既存のGitHub ActionsによるECSデプロイ経路を維持したまま、AWS CodePipeline / CodeBuildによる新しいCI/CD経路を構築しました。
+既存のGitHub ActionsによるECSデプロイ経路を維持したまま、AWS CodePipeline / CodeBuildによる新しいCI/CD経路を構築しました。
 
 単純なCI/CDツールの置き換えではなく、ユーザー影響と切り戻し可能性を考慮し、ECS Service / Target Groupを分離した段階的な移行方式を採用しました。
 
@@ -10,7 +28,7 @@ STT + ECSプロジェクトの続編として、既存のGitHub Actionsによる
 
 元のSTT + ECSプロジェクトでは、Flask製の音声文字起こしWebアプリをDocker化し、ECS、ALB、ECR、Secrets Managerなどを使ってAWS上で動かしました。
 
-今回の続編では、そのアプリのデプロイ基盤をGitHub ActionsからAWS CodePipeline / CodeBuildへ移行し、AWS上でSource、Build、DeployをつなぐCI/CD構成を検証しました。
+今回のPhase 2では、そのアプリのデプロイ基盤をGitHub ActionsからAWS CodePipeline / CodeBuildへ移行し、AWS上でSource、Build、DeployをつなぐCI/CD構成を検証しました。
 
 ## 構成
 
@@ -50,6 +68,6 @@ CI/CD基盤の移行は、アプリケーションの小規模修正よりも影
 
 ## 関連
 
-- 元プロジェクト: `../stt-ecs/`
+- 親プロジェクト: `../stt-ecs/`
 - アーキテクチャ: `architecture.md`
 - 設計判断: `design-decisions.md`
