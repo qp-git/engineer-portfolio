@@ -11,6 +11,17 @@
   - Phase 1で構築したAI音声文字起こしアプリを対象に、GitHub ActionsからAWS CodePipeline / CodeBuildへCI/CD基盤を段階移行する
 <!-- STT_ECS_PHASE_POSITION_END -->
 
+<!-- STT_ECS_PHASE_SCOPE_START -->
+## Phase 1の範囲
+
+Phase 1では、AI音声文字起こしアプリをAWS上で動かすための実行基盤を整理しています。
+
+主な対象は、アプリ本体、Dockerコンテナ化、ECR、ECS、ALB、Secrets Manager、HTTPS入口です。
+
+一方で、デプロイ経路の段階移行、切替手順、Smoke Test、切り戻し可能性は、Phase 2である [STT + ECS / Phase 2: CI/CD基盤移行](../stt-ecs-cicd-migration/) に整理しています。
+<!-- STT_ECS_PHASE_SCOPE_END -->
+
+
 
 ## 概要
 
