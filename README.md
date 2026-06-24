@@ -11,16 +11,6 @@ AWS、Linux、ネットワーク、Webアプリ周辺の自己学習・自作プ
 
 ## プロジェクト一覧
 
-<!-- STT_ECS_SERIES_START -->
-### STT + ECS
-
-ブラウザで録音した音声を Flask バックエンドへ送り、OpenAI API で文字起こしと要約を行う構成を検証しました。
-
-- [STT + ECS / Phase 1: ECSによる運用](./projects/stt-ecs/) - この自作アプリを Docker コンテナ化し、ECR、ECS、ALB を使って AWS 上で動かす流れを確認しました。
-- [STT + ECS / Phase 2: CI/CD基盤移行](./projects/stt-ecs-cicd-migration/) - Phase 1で構築したAI音声文字起こしアプリを対象に、CI/CD基盤を段階移行し、本番URL Smoke TestでSecret注入とOpenAI API連携まで確認しました。
-<!-- STT_ECS_SERIES_END -->
-
-
 ### 1. OdaiBox
 
 Discord のボイスチャット中に使える、お題出題 Bot と Web 管理画面を作成したプロジェクトです。
