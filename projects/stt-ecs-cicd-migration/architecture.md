@@ -38,7 +38,7 @@ flowchart TB
     ALB --> ActionsTG[Actions側 Target Group]
     ActionsTG --> ActionsSvc[Actions側 ECS Service]
 
-    Validator[Validation Access] -->|HTTP:81| ALB
+    Validator[Pipeline事前確認] -->|HTTP:81| ALB
     ALB --> PipelineTG[Pipeline側 Target Group]
     PipelineTG --> PipelineSvc[Pipeline側 ECS Service]
     PipelineSvc --> App[STT Flask App]
