@@ -2,11 +2,11 @@
 
 ## 位置づけ
 
-このアーキテクチャは、STT + ECSアプリ本体の新規構築ではなく、STT + ECS / Phase 1で構築した既存アプリに対するCI/CD基盤移行フェーズを示すものです。
+このアーキテクチャは、STT + ECS / Phase 1で構築した既存アプリに対するCI/CD基盤移行を示すものです。
 
-STT + ECS / Phase 1では、AI音声文字起こしアプリをECS、ALB、Secrets Manager上で動かす構成を整理しました。
+Phase 1では、AI音声文字起こしアプリをECS、ALB、Secrets Manager上で動かす構成を整理しました。
 
-STT + ECS / Phase 2では、その既存アプリに対して、GitHub Actions経路とCodePipeline経路を分離し、段階的に本番入口を切り替えました。
+Phase 2では、その既存アプリに対して、GitHub Actions経路とCodePipeline経路を分離し、段階的に本番入口を切り替えました。
 
 ## 移行前
 
@@ -26,12 +26,15 @@ Actions側 ECS Service
 STT Flask App
   ↓
 OpenAI API
-事前検証時
+```
+
+## 事前検証時
 
 CodePipeline側のECS Serviceを新規に作成し、Actions側Serviceとは別のTarget Groupに紐づけました。
 
 本番入口であるHTTPS:443は既存のActions側Target Groupへ向けたまま、HTTP:81の一時的な検証用ListenerをPipeline側Target Groupへ向けました。
 
+```text
 本番アクセス
   ↓ HTTPS:443
 ALB
@@ -39,6 +42,9 @@ ALB
 Actions側 Target Group
   ↓
 Actions側 ECS Service
+```
+
+```text
 検証アクセス
   ↓ HTTP:81
 ALB
@@ -46,10 +52,11 @@ ALB
 Pipeline側 Target Group
   ↓
 Pipeline側 ECS Service
+```
 
 この構成により、ユーザー向けの本番入口を維持したまま、新しいPipeline側Serviceの画面表示とSTT API応答を確認しました。
 
-切替時
+## 切替時
 
 切替時には、ALB Fixed responseを利用して一時的なメンテナンス表示を返しました。
 
@@ -57,10 +64,11 @@ Pipeline側 ECS Service
 
 その後、HTTPS:443の転送先をActions側Target GroupからPipeline側Target Groupへ変更しました。
 
-切替後
+## 切替後
 
 切替後は、HTTPS:443がPipeline側Target Groupへ向く構成になりました。
 
+```text
 User
   ↓ HTTPS:443
 ALB
@@ -72,17 +80,41 @@ Pipeline側 ECS Service
 STT Flask App
   ↓
 OpenAI API
+```
 
-切替後は、CodeBuildから本番URLへSmoke Testを実行し、以下の経路を確認しました。
+## CodePipelineとSmoke Testの流れ
 
-ALB Listener
-Target Group
-ECS Task
-Flask Application
-Secrets ManagerからのAPI Key注入
-OpenAI API連携
-STT API応答
-補足
+切替後は、CodePipelineのDeploy成功だけで完了とせず、CodeBuildから本番URLへSmoke Testを実行しました。
+
+Smoke Testでは、ECS Task上のアプリがSecrets ManagerからAPIキーを受け取り、OpenAI API連携まで正常に行えることを確認しました。
+
+```mermaid
+flowchart LR
+    Dev[Developer] --> GitHub[GitHub Repository]
+    GitHub --> Pipeline[AWS CodePipeline]
+
+    Pipeline --> Source[Source Stage]
+    Source --> Build[Build Stage<br>AWS CodeBuild]
+    Build --> ECR[Amazon ECR]
+    Build --> ImageDef[imagedefinitions.json]
+
+    ImageDef --> Deploy[Deploy Stage<br>ECS Deploy Action]
+    Deploy --> ECS[ECS Service<br>Pipeline側Service]
+    ECS --> Task[ECS Task<br>Flask STT App]
+
+    Task -. valueFrom .-> Secrets[Secrets Manager<br>OPENAI_API_KEY]
+    Task --> OpenAI[OpenAI API]
+
+    Deploy --> Smoke[Post Deploy Smoke Test<br>AWS CodeBuild]
+    Smoke --> ProdURL[HTTPS 本番URL]
+    ProdURL --> ALB[ALB HTTPS:443]
+    ALB --> TG[Pipeline側 Target Group]
+    TG --> Task
+```
+
+この構成では、Smoke Testが直接Secretの値を見るのではなく、本番URL経由でSTT APIを実行します。アプリがOpenAI API連携まで成功することで、Secrets ManagerからECS TaskへのAPIキー注入も含めて確認しています。
+
+## 補足
 
 この構成は、CodeDeployを使った厳密なBlue/Green Deployではありません。
 

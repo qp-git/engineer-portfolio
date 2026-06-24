@@ -2,7 +2,7 @@
 
 ## 位置づけ
 
-この設計判断は、STT + ECS / Phase 1で構築したアプリ本体の新規開発ではなく、その既存アプリをより安全に運用するためのPhase 2のCI/CD基盤移行に関するものです。
+この設計判断は、STT + ECS / Phase 1で構築したアプリを、より安全に更新し続けるためのPhase 2のCI/CD基盤移行に関するものです。
 
 評価ポイントは、CodePipelineを使ったこと自体ではありません。
 
@@ -40,24 +40,15 @@ Pipeline側は、HTTP:81の一時的な検証用Listenerで確認しました。
 
 小規模な学習・検証環境であっても、切替中の状態を利用者にそのまま見せないことは、運用を意識した設計判断として重要だと考えました。
 
-## 5. Smoke Testは切替後に追加する
-
-Smoke Testは、CI/CD基盤そのものの切替後にローリングデプロイで追加しました。
-
-CI/CD基盤の切替は、ECS Service、Task Definition、Target Group、ALB Listener、Security Group、Secrets Managerなどが関係するため、段階移行で慎重に進めました。
-
-一方で、Smoke Testは運用品質を高めるための追加機能であり、アプリ本体やユーザー向け経路の大幅な変更ではなかったため、ローリングデプロイで許容可能と判断しました。
-
-## 6. Deploy成功ではなくユーザー経路の成功を見る
+## 5. Deploy成功ではなくユーザー経路の成功を見る
 
 CodePipelineのDeploy Actionが成功しても、ユーザーが実際に使う経路でアプリが動くとは限りません。
 
-ALBの向き先、Target GroupのHealth Check、ECS Taskの起動、Secrets ManagerからのAPI Key注入、OpenAI API連携のどこかに問題があれば、ユーザー体験としては失敗になります。
+ALBの向き先、Target GroupのHealth Check、ECS Taskの起動、Secrets ManagerからのAPIキー注入、OpenAI API連携のどこかに問題があれば、ユーザー体験としては失敗になります。
 
 そのため、切替後に本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めた経路で動作確認しました。
 
-<!-- API_KEY_VALIDATION_START -->
-## APIキー注入の確認方法
+## 6. APIキー注入は値ではなく動作で確認する
 
 OpenAI APIキーは、コードやDockerイメージに含めず、Secrets ManagerからECS Taskへ注入する構成にしました。
 
@@ -76,10 +67,15 @@ OpenAI APIキーは、コードやDockerイメージに含めず、Secrets Manag
 
 つまり、Smoke TestはAPIキーの値を直接確認するものではなく、Secret注入と外部API連携を含むユーザー経路の成立を確認するものです。
 
-<!-- API_KEY_VALIDATION_END -->
+## 7. Smoke Test追加は切替後の運用品質改善として扱う
 
+Smoke Testは、CI/CD基盤そのものの切替後にローリングデプロイで追加しました。
 
-## 7. 完全なBlue/Green構成にはしない
+CI/CD基盤の切替は、ECS Service、Task Definition、Target Group、ALB Listener、Security Group、Secrets Managerなどが関係するため、段階移行で慎重に進めました。
+
+一方で、Smoke Testは運用品質を高めるための追加機能であり、アプリ本体やユーザー向け経路の大幅な変更ではなかったため、ローリングデプロイで許容可能と判断しました。
+
+## 8. 完全なBlue/Green構成にはしない
 
 より厳密に分離する場合、CodeDeploy Blue/Green、別ALB構成、CodeBuildのVPC実行、NAT GatewayとElastic IPによる送信元固定なども考えられます。
 
@@ -91,6 +87,6 @@ OpenAI APIキーは、コードやDockerイメージに含めず、Secrets Manag
 
 今回の判断は、CI/CDツールの置き換えではなく、既存の本番経路を守りながら新しい運用基盤へ移行するための設計判断です。
 
-AI APIを利用するWebアプリでは、アプリ本体だけでなく、Secret管理、外部API連携、ALB経路、ECS Task、CI/CDの実行環境まで含めて確認する必要があります。Phase 2では、その観点から、Phase 1で構築したアプリを安全に更新し続けるための経路を整理しました。
+AI APIを利用するWebアプリでは、アプリ本体だけでなく、Secret管理、外部API連携、ALB経路、ECS Task、CI/CDの実行環境まで含めて確認する必要があります。
 
 この移行を通して、ECS上のAIアプリを安全に更新し続けるためには、デプロイ成功だけでなく、ユーザー経路での動作確認と切り戻し可能性を設計に含めることが重要だと学びました。
