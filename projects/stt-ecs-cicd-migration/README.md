@@ -77,7 +77,7 @@ Pipeline側の事前確認後、本番入口であるHTTPS:443の向き先を切
 
 HTTPS:443をPipeline側Target Groupへ切り替えた後、本番URL経由でSmoke Testを実行しました。
 
-Smoke Testでは、ALB、Target Group、ECS Task、Flaskアプリ、Secrets ManagerからのAPI Key注入、OpenAI API連携まで含めて確認しました。
+Smoke Testでは、ALB、Target Group、ECS Task、Flaskアプリ、Secrets ManagerからのAPI Key注入、OpenAI API連携まで含めて確認しました。APIキーの値を直接確認するのではなく、本番URL経由でSTT APIが成功することで、Secret注入と外部API連携を含むユーザー経路が成立していることを確認しました。
 
 CodePipelineのDeploy成功だけで完了とせず、ユーザーが実際に通る経路でAPIが成功することを確認した点を重視しました。
 

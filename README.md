@@ -17,7 +17,7 @@ AWS、Linux、ネットワーク、Webアプリ周辺の自己学習・自作プ
 ブラウザで録音した音声を Flask バックエンドへ送り、OpenAI API で文字起こしと要約を行う構成を検証しました。
 
 - [STT + ECS / Phase 1: ECSによる運用](./projects/stt-ecs/) - この自作アプリを Docker コンテナ化し、ECR、ECS、ALB を使って AWS 上で動かす流れも確認しました。
-- [STT + ECS / Phase 2: CI/CD基盤移行](./projects/stt-ecs-cicd-migration/) - Phase 1で構築したAI音声文字起こしアプリを対象に、CI/CD基盤を段階移行した運用改善フェーズ。
+- [STT + ECS / Phase 2: CI/CD基盤移行](./projects/stt-ecs-cicd-migration/) - Phase 1で構築したAI音声文字起こしアプリを対象に、CI/CD基盤を段階移行し、本番URL Smoke TestでSecret注入とOpenAI API連携まで確認した運用改善フェーズ。
 <!-- STT_ECS_SERIES_END -->
 
 

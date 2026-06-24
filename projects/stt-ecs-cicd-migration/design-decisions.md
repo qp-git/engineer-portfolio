@@ -56,6 +56,29 @@ ALBの向き先、Target GroupのHealth Check、ECS Taskの起動、Secrets Mana
 
 そのため、切替後に本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めた経路で動作確認しました。
 
+<!-- API_KEY_VALIDATION_START -->
+## APIキー注入の確認方法
+
+OpenAI APIキーは、コードやDockerイメージに含めず、Secrets ManagerからECS Taskへ注入する構成にしました。
+
+公開用の説明では、APIキーの値そのものを確認したとは表現しません。確認したのは、Secrets ManagerからECS TaskへSecretが注入され、その値を使ってアプリがOpenAI APIを呼び出せる状態になっていることです。
+
+具体的には、切替後にCodeBuildからHTTPS本番URLへSmoke Testを実行し、STT APIが成功することを確認しました。
+
+このSmoke Testが成功するためには、以下がすべて成立している必要があります。
+
+- ALB HTTPS:443 がPipeline側Target Groupへ転送していること
+- Target Groupに正常なECS Taskが登録されていること
+- ECS Task上でFlaskアプリが起動していること
+- Task Definition経由でSecrets Managerの値が環境変数として注入されていること
+- アプリがそのAPIキーを使ってOpenAI APIへリクエストできること
+- STT APIが期待した応答を返すこと
+
+つまり、Smoke TestはAPIキーの値を直接確認するものではなく、Secret注入と外部API連携を含むユーザー経路の成立を確認するものです。
+
+<!-- API_KEY_VALIDATION_END -->
+
+
 ## 7. 完全なBlue/Green構成にはしない
 
 より厳密に分離する場合、CodeDeploy Blue/Green、別ALB構成、CodeBuildのVPC実行、NAT GatewayとElastic IPによる送信元固定なども考えられます。
