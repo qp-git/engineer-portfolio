@@ -48,6 +48,14 @@ ALBの向き先、Target GroupのHealth Check、ECS Taskの起動、Secrets Mana
 
 そのため、切替後に本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めた経路で動作確認しました。
 
+既存のGitHub Actions構成でも、OIDCでAWS Roleを引き受けてECS Deployを実行できていました。そのため、CodePipelineへの移行理由は、GitHub Actionsで実現できない機能を補うことではありません。
+
+今回重視したのは、STTサービスのリリース判定をAWS側の運用境界に寄せることです。このサービスでは、ブラウザ録音のためのHTTPS入口、Secrets ManagerからのAPIキー注入、ALB / Target Group / ECS Taskの経路、OpenAI API連携がすべて成立して初めて、ユーザーに提供できる状態になります。
+
+そのため、Build、ECR push、ECS Deploy、Deploy後の本番URL Smoke TestをCodePipeline / CodeBuild側に寄せ、AWS上のリリースフローとして一体で管理する構成にしました。
+
+この構成にしておくことで、将来的に手動承認、失敗通知、追加のAPIテスト、Blue/Green Deployなどを、AWS側のリリースフローとして拡張しやすくなります。
+
 ## 6. APIキー注入は値ではなく動作で確認する
 
 OpenAI APIキーは、コードやDockerイメージに含めず、Secrets ManagerからECS Taskへ注入する構成にしました。
