@@ -2,33 +2,29 @@
 
 ## 位置づけ
 
-このプロジェクトは、`STT + ECS` の続編です。
+このプロジェクトは、`STT + ECS` シリーズのPhase 2です。
 
-アプリ本体を新しく作ったものではなく、既存のSTT + ECSアプリを対象に、CI/CD基盤をGitHub ActionsからAWS CodePipeline / CodeBuildへ段階移行した運用改善フェーズです。
+- [STT + ECS / Phase 1: アプリ基盤構築](../stt-ecs/)
+  - Flask製の音声文字起こしWebアプリをDocker化し、ECS、ALB、ECR、Secrets Managerを使ってAWS上で動かす
+- STT + ECS / Phase 2: CI/CD基盤移行
+  - 既存のSTT + ECSアプリを対象に、GitHub ActionsからAWS CodePipeline / CodeBuildへCI/CD基盤を段階移行する
 
-大きなテーマは、AI音声文字起こしアプリをAWS ECS上で安全に運用することです。
-
-- Phase 1: STT + ECS
-  - AI音声文字起こしアプリ本体
-  - Docker / ECS / ALB / Secrets Manager / HTTPS
-- Phase 2: STT + ECS CI/CD基盤移行
-  - GitHub ActionsからCodePipeline / CodeBuildへの移行
-  - Target Group分離
-  - ALB Listenerによる段階検証
-  - ALB Fixed responseによる切替時のメンテナンス表示
-  - 本番URL Smoke Test
+Phase 2では、アプリ本体を新しく作り直したわけではありません。  
+Phase 1で構築したAI音声文字起こしアプリを、より安全に更新し続けるための運用改善フェーズとして整理しています。
 
 ## 概要
 
 既存のGitHub ActionsによるECSデプロイ経路を維持したまま、AWS CodePipeline / CodeBuildによる新しいCI/CD経路を構築しました。
 
-単純なCI/CDツールの置き換えではなく、ユーザー影響と切り戻し可能性を考慮し、ECS Service / Target Groupを分離した段階的な移行方式を採用しました。
+単純にデプロイツールを置き換えるのではなく、既存の本番経路を守りながら新しいデプロイ経路を並行構築し、検証、切替、Smoke Test、切り戻し可能性まで考慮した段階移行を行いました。
 
-## 背景
+## 目的
 
-元のSTT + ECSプロジェクトでは、Flask製の音声文字起こしWebアプリをDocker化し、ECS、ALB、ECR、Secrets Managerなどを使ってAWS上で動かしました。
+このPhaseの目的は、AIアプリを「作って動かす」段階から、**安全に更新し続ける**段階へ進めることです。
 
-今回のPhase 2では、そのアプリのデプロイ基盤をGitHub ActionsからAWS CodePipeline / CodeBuildへ移行し、AWS上でSource、Build、DeployをつなぐCI/CD構成を検証しました。
+AI APIを利用するWebアプリでは、アプリ本体だけでなく、API Key管理、ECS Task Definition、ALBの入口設計、Target Group、Security Group、外部API連携まで含めて確認する必要があります。
+
+そのため、CI/CD移行でも「Deployが成功したか」だけではなく、ユーザーがアクセスする本番URLから、アプリと外部API連携まで正常に動くことを確認する方針にしました。
 
 ## 構成
 
@@ -53,21 +49,55 @@
 
 ## 工夫した点
 
-CI/CD基盤の移行は、アプリケーションの小規模修正よりも影響範囲が広いため、既存経路をすぐに削除せず、新旧のデプロイ経路を並行させました。
+### 1. 新旧デプロイ経路を分離した
 
-本番入口のHTTPS:443は移行直前まで既存経路に維持し、別ListenerでPipeline側を事前検証することで、ユーザー影響を抑えながら新しいCI/CD経路を確認しました。
+CI/CD基盤の移行は、アプリケーションの小規模修正よりも影響範囲が広くなります。
 
-切替後は、Deploy成功だけで完了とせず、本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めたユーザー経路で動作確認しました。
+今回の移行では、ECS Service、Task Definition、Target Group、ALB Listener、Security Group、Secrets Manager、IAM Roleが関係するため、既存のGitHub Actions経路をすぐに削除せず、CodePipeline側の経路を別に構築しました。
+
+Actions側ServiceとPipeline側Serviceを別Target Groupに分けることで、既存経路を残したまま新しい経路を検証できるようにしました。
+
+### 2. 本番入口を変えずにPipeline側を事前検証した
+
+本番入口であるHTTPS:443は、移行直前まで既存のActions側Target Groupに維持しました。
+
+そのうえで、HTTP:81の一時的な検証用ListenerをPipeline側Target Groupへ向け、Pipeline側Serviceの画面表示とSTT API応答を確認しました。
+
+これにより、ユーザー向けの本番入口に影響を出さずに、新しいCI/CD経路を事前確認できる状態を作りました。
+
+### 3. 切替中はメンテナンス表示を返した
+
+Pipeline側の事前確認後、本番入口であるHTTPS:443の向き先を切り替えるタイミングでは、ALB Fixed responseで一時的なメンテナンス表示を返しました。
+
+これは、ユーザーが古い経路と新しい経路の中途半端な状態を見ることを避けるためです。
+
+小規模な学習・検証環境であっても、切替中の状態をそのまま見せないようにした点は、運用を意識した設計判断として整理しています。
+
+### 4. 切替後に本番URL経由でSmoke Testを実行した
+
+HTTPS:443をPipeline側Target Groupへ切り替えた後、本番URL経由でSmoke Testを実行しました。
+
+Smoke Testでは、ALB、Target Group、ECS Task、Flaskアプリ、Secrets ManagerからのAPI Key注入、OpenAI API連携まで含めて確認しました。
+
+CodePipelineのDeploy成功だけで完了とせず、ユーザーが実際に通る経路でAPIが成功することを確認した点を重視しました。
+
+### 5. Smoke Test追加は切替後の運用品質改善として扱った
+
+Smoke Testは、CI/CD基盤そのものの切替後にローリングデプロイで追加しました。
+
+CI/CD基盤の切替は複数のAWSリソースが関係するため慎重に段階移行しましたが、Smoke Testは運用品質を高めるための追加機能であり、アプリ本体やユーザー向け経路を大きく変えるものではありません。
+
+そのため、切替後の改善としてローリングデプロイで反映可能と判断しました。
 
 ## 学び
 
-- CI/CD移行では、デプロイツールだけでなく、ECS Service、Target Group、ALB Listener、Security Group、Secrets Managerまで含めて影響範囲を考える必要がある
-- 本番経路を守りながら新経路を検証するには、Target Group分離や一時的な検証用Listenerが有効
-- Deploy成功だけではなく、ユーザー経路でアプリと外部API連携まで確認することが重要
+- CI/CD移行では、ビルド・デプロイだけでなく、ALB、ECS、Secrets Manager、Security Groupまで含めて影響範囲を考える必要がある
+- 新旧Target Groupを分離すると、本番経路を維持したまま新しい経路を検証しやすい
+- Deploy成功だけではなく、本番URL経由でユーザー経路の動作確認を行うことが重要
 - 学習・検証環境では、完全なBlue/Green構成に寄せすぎず、コストと構成複雑性のバランスを取る判断も必要
 
-## 関連
+## 関連ドキュメント
 
-- 親プロジェクト: `../stt-ecs/`
-- アーキテクチャ: `architecture.md`
-- 設計判断: `design-decisions.md`
+- [STT + ECS / Phase 1: アプリ基盤構築](../stt-ecs/)
+- [Architecture](architecture.md)
+- [Design Decisions](design-decisions.md)
