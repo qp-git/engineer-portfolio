@@ -1,3 +1,11 @@
+# Note
+
+この内容は、STT + ECSプロジェクト時点でのCodePipeline移行計画メモです。
+
+CI/CD移行の実施結果は、続編プロジェクト `../stt-ecs-cicd-migration/` に整理しています。
+
+---
+
 # STT + ECS CodePipeline Plan
 
 ## 目的
@@ -10,7 +18,7 @@ STT + ECSプロジェクトについて、AWS CodePipeline / CodeBuild / ECR / E
 
 STT + ECSプロジェクトでは、FlaskアプリをDocker化し、ECR、ECS Fargate、ALBを使ってAWS上で動作させる構成を検証した。
 
-今後は、手動でのDockerビルドやECS更新ではなく、GitHubリポジトリの変更を起点として、Dockerイメージのビルド、ECRへのpush、ECSサービス更新までを自動化する。
+この計画を踏まえて、GitHubリポジトリの変更を起点に、Dockerイメージのビルド、ECRへのpush、ECSサービス更新までをAWS CodePipeline / CodeBuildで自動化する構成を検証した。実施結果は続編プロジェクト `../stt-ecs-cicd-migration/` に整理している。
 
 先に作成した `cicd-comparison.md` では、GitHub ActionsとAWS CodePipeline / CodeBuildの違いを整理した。このドキュメントでは、CodePipelineを使う場合の具体的な構成案を整理する。
 
