@@ -100,3 +100,29 @@
 | リプレイス演習 | Amazon Linux 2 から Amazon Linux 2023、ALB、Web/AP/DB、移行、検証、チームリーダー |
 | 障害対応演習 | 障害切り分け、監視、Route 53 Health Check、CloudWatch Alarm、SNS、cron見直し |
 | 実機ネットワーク演習 | Catalyst、VLAN、Trunk、HSRP、Ubuntu VM、Nginx、疎通確認 |
+
+<!-- SKILL_TREE_STT_ECS_START -->
+## STT + ECSで示せるスキル
+
+### Phase 1: ECSによる運用
+
+| 領域 | 示せること |
+|---|---|
+| アプリ実行基盤 | FlaskアプリをDocker化し、ECR / ECS / ALB上で動かす構成を整理 |
+| コンテナ運用 | Dockerfile、ECR、ECS Task Definition、Service構成の理解 |
+| ネットワーク | ALB、Target Group、HTTPS入口、Security Groupの関係整理 |
+| Secret管理 | OpenAI APIキーをコードに含めず、Secrets Manager経由でECS Taskへ注入 |
+| AIアプリ基盤 | ブラウザ録音、Flaskバックエンド、OpenAI API連携をAWS上で動かす構成 |
+
+### Phase 2: CI/CD基盤移行
+
+| 領域 | 示せること |
+|---|---|
+| CI/CD設計 | GitHub ActionsからCodePipeline / CodeBuildへの段階移行 |
+| 安全な移行設計 | 既存本番経路を残したまま、新しいPipeline側Serviceを並行構築 |
+| ALB切替 | Target Group分離、一時的なHTTP:81検証Listener、HTTPS:443切替 |
+| 切替時の運用配慮 | ALB Fixed responseによる一時メンテナンス表示 |
+| Smoke Test | 本番URL経由でALB / ECS / Secret注入 / OpenAI API連携を確認 |
+| 切り戻し設計 | 旧Actions側Target Group / Serviceを一時保持し、問題時に戻せる構成を考慮 |
+| 設計判断 | 完全Blue/Greenや別ALB構成にせず、学習・検証環境としてコストと複雑性を調整 |
+<!-- SKILL_TREE_STT_ECS_END -->
