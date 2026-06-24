@@ -4,7 +4,7 @@
 
 このプロジェクトは、`STT + ECS` シリーズのPhase 2です。
 
-- [STT + ECS / Phase 1: アプリ基盤構築](../stt-ecs/)
+- [STT + ECS / Phase 1: ECSによる運用](../stt-ecs/)
   - Flask製の音声文字起こしWebアプリをDocker化し、ECS、ALB、ECR、Secrets Managerを使ってAWS上で動かす
 - STT + ECS / Phase 2: CI/CD基盤移行
   - 既存のSTT + ECSアプリを対象に、GitHub ActionsからAWS CodePipeline / CodeBuildへCI/CD基盤を段階移行する
@@ -98,6 +98,6 @@ CI/CD基盤の切替は複数のAWSリソースが関係するため慎重に段
 
 ## 関連ドキュメント
 
-- [STT + ECS / Phase 1: アプリ基盤構築](../stt-ecs/)
+- [STT + ECS / Phase 1: ECSによる運用](../stt-ecs/)
 - [Architecture](architecture.md)
 - [Design Decisions](design-decisions.md)

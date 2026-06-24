@@ -1,15 +1,14 @@
-# STT + ECS
+# STT + ECS / Phase 1: ECSによる運用
 
 <!-- STT_ECS_PHASE_POSITION_START -->
 ## 位置づけ
 
 このプロジェクトは、`STT + ECS` シリーズのPhase 1です。
 
-- STT + ECS / Phase 1: アプリ基盤構築
-  - AI音声文字起こしアプリをDocker化し、ECS、ALB、ECR、Secrets Managerを使ってAWS上で動かす
+- STT + ECS / Phase 1: ECSによる運用
+  - ブラウザで録音した音声をFlaskバックエンドへ送り、OpenAI APIで文字起こしと要約を行う自作アプリを、Docker、ECR、ECS、ALBを使ってAWS上で動かす
 - [STT + ECS / Phase 2: CI/CD基盤移行](../stt-ecs-cicd-migration/)
-  - 既存のSTT + ECSアプリを対象に、GitHub ActionsからAWS CodePipeline / CodeBuildへCI/CD基盤を段階移行する
-
+  - Phase 1で構築したAI音声文字起こしアプリを対象に、GitHub ActionsからAWS CodePipeline / CodeBuildへCI/CD基盤を段階移行する
 <!-- STT_ECS_PHASE_POSITION_END -->
 
 
