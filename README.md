@@ -26,7 +26,7 @@ STT（Speech to Text、音声をテキスト化する処理）を使い、録音
 ブラウザで録音した音声を Flask バックエンドへ送り、OpenAI API で文字起こしと要約を行う構成を検証しました。また、この自作アプリを Docker コンテナ化し、ECR、ECS、ALB を使って AWS 上で動かす流れも確認しました。
 
 - [詳細](./projects/stt-ecs/)
-  - [STT + ECS / Phase 2: CI/CD基盤移行](projects/stt-ecs-cicd-migration/) - STT + ECSの続編として、CI/CD基盤を段階移行した運用改善フェーズ
+  - [STT + ECS / Phase 2: CI/CD基盤移行](projects/stt-ecs-cicd-migration/) - STT + ECSの続編として、CI/CD基盤をGithub actionsからAWS CodePipelineへ段階移行した運用改善フェーズ。さらに実際のAPIキーでのSmokeTestも導入。
 
 ### 3. Alexa Skill
 
