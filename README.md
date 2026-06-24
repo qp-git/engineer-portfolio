@@ -53,3 +53,12 @@ STT + ECSの再開手順整理やCodePipelineによるCI/CD検証に加え、SQL
 
 詳細な作業内容と進捗は [Issues](../../issues) に整理しています。
 
+<!-- STT_ECS_CICD_START -->
+## STT WebアプリのCI/CD基盤移行
+
+既存のGitHub ActionsによるECSデプロイ経路を維持したまま、AWS CodePipeline / CodeBuildによる新しいCI/CD経路を構築しました。
+
+Actions側ServiceとPipeline側Serviceを別Target Groupに分離し、一時的な検証用ListenerでPipeline側を確認したうえで、本番HTTPS Listenerを段階的に切り替えました。切替後は本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めたユーザー経路で動作確認しました。
+
+詳細: `projects/stt-ecs-cicd-migration.md`
+<!-- STT_ECS_CICD_END -->
