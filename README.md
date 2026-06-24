@@ -27,7 +27,7 @@ STT（Speech to Text、音声をテキスト化する処理）を使い、録音
 
 - [詳細](./projects/stt-ecs/)
   - [STT + ECS / Phase 2: CI/CD基盤移行](projects/stt-ecs-cicd-migration/) - Phase 1で構築したAI音声文字起こしアプリを対象に、CI/CD基盤を段階移行した運用改善フェーズ
-  - [STT + ECS / Phase 2: CI/CD基盤移行](projects/stt-ecs-cicd-migration/) - STT + ECSの続編として、CI/CD基盤を段階移行した運用改善フェーズ
+
 
 ### 3. Alexa Skill
 
