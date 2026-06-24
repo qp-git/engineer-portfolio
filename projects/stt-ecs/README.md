@@ -129,6 +129,6 @@ Qiita記事は準備中です。
 
 CI/CD移行では、Actions側ServiceとPipeline側Serviceを別Target Groupに分離し、本番入口を維持したまま一時的な検証用ListenerでPipeline側を確認しました。切替後は本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めたユーザー経路で動作確認しました。
 
-詳細は [`../stt-ecs-cicd-migration/`](../stt-ecs-cicd-migration/) に整理しています。
+詳細は [STT + ECS / Phase 2: CI/CD基盤移行](../stt-ecs-cicd-migration/) に整理しています。
 
 <!-- STT_ECS_PHASE2_END -->

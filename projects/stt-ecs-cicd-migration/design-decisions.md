@@ -4,31 +4,41 @@
 
 この設計判断は、STT + ECSアプリ本体の新規開発ではなく、既存のSTT + ECSアプリをより安全に運用するためのCI/CD基盤移行に関するものです。
 
-そのため、評価ポイントはアプリ機能そのものではなく、既存の本番経路を維持しながら新しいデプロイ経路を検証し、切替と切り戻しを考慮した点にあります。
+評価ポイントは、CodePipelineを使ったこと自体ではありません。
+
+既存の本番経路を壊さず、新しいデプロイ経路を並行して構築し、検証、切替、Smoke Test、切り戻し可能性まで考慮した点が中核です。
 
 ## 1. 既存のGitHub Actions経路をすぐに削除しない
 
-CI/CD基盤の移行は、アプリケーションの小規模修正よりも影響範囲が広いため、既存のGitHub Actions側Serviceをすぐに削除しませんでした。
+CI/CD基盤の移行は、アプリケーションの小規模修正よりも影響範囲が広くなります。
 
-新しいCodePipeline側Serviceを別に作成し、切替前に疎通確認できる状態を作りました。
+ECS Service、Task Definition、Target Group、ALB Listener、Security Group、Secrets Manager、IAM Roleが関係するため、既存のGitHub Actions側Serviceをすぐに削除せず、切り戻し可能な状態を残しました。
+
+これにより、新しいCodePipeline側Serviceに問題があった場合でも、本番入口を既存Target Groupへ戻すことで復旧できる構成にしました。
 
 ## 2. ServiceとTarget Groupを分離する
 
 Actions側ServiceとPipeline側Serviceを別Target Groupに分離しました。
 
-これにより、本番入口を既存経路に維持したまま、新しいPipeline側経路を別Listenerで確認できるようにしました。
+同じTarget Groupに混在させると、どちらのデプロイ経路で起動したTaskに到達しているのか分かりにくくなります。
+
+Target Groupを分離することで、Actions側とPipeline側を明確に切り分け、本番経路を維持したままPipeline側だけを検証できるようにしました。
 
 ## 3. 本番HTTPS:443は移行直前まで既存経路に維持する
 
 本番入口であるHTTPS:443は、移行直前までActions側Target Groupへ向けたままにしました。
 
-Pipeline側はHTTP:81の一時的な検証用Listenerで確認し、ユーザー影響を抑えながら新経路を検証しました。
+Pipeline側は、HTTP:81の一時的な検証用Listenerで確認しました。
+
+これにより、ユーザー向けの入口を変えずに、Pipeline側のService、Task Definition、Secret注入、アプリ応答を確認できる状態を作りました。
 
 ## 4. 切替時にALB Fixed responseを利用する
 
-切替中にユーザーが古い経路と新しい経路の中途半端な状態を見ることを避けるため、ALB Fixed responseで一時的なメンテナンス表示を行いました。
+切替時には、ALB Fixed responseで一時的なメンテナンス表示を行いました。
 
-そのうえで、HTTPS:443の転送先をPipeline側Target Groupへ切り替えました。
+目的は、ユーザーが古い経路と新しい経路の中途半端な状態を見ることを避けるためです。
+
+小規模な学習・検証環境であっても、切替中の状態を利用者にそのまま見せないことは、運用を意識した設計判断として重要だと考えました。
 
 ## 5. Smoke Testは切替後に追加する
 
@@ -38,12 +48,26 @@ CI/CD基盤の切替は、ECS Service、Task Definition、Target Group、ALB Lis
 
 一方で、Smoke Testは運用品質を高めるための追加機能であり、アプリ本体やユーザー向け経路の大幅な変更ではなかったため、ローリングデプロイで許容可能と判断しました。
 
-## 6. 完全なBlue/Green構成にはしない
+## 6. Deploy成功ではなくユーザー経路の成功を見る
+
+CodePipelineのDeploy Actionが成功しても、ユーザーが実際に使う経路でアプリが動くとは限りません。
+
+ALBの向き先、Target GroupのHealth Check、ECS Taskの起動、Secrets ManagerからのAPI Key注入、OpenAI API連携のどこかに問題があれば、ユーザー体験としては失敗になります。
+
+そのため、切替後に本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めた経路で動作確認しました。
+
+## 7. 完全なBlue/Green構成にはしない
 
 より厳密に分離する場合、CodeDeploy Blue/Green、別ALB構成、CodeBuildのVPC実行、NAT GatewayとElastic IPによる送信元固定なども考えられます。
 
-ただし、今回の学習・検証環境では、構成複雑化とコスト増を避けるため、Target Group分離と一時的な検証用Listenerによる段階移行を採用しました。
+ただし、今回の学習・検証環境では、構成複雑化とコスト増を避ける判断をしました。
+
+完全なBlue/Green構成ほどの厳密性はありませんが、Target Group分離、一時的な検証用Listener、ALB Fixed response、本番URL Smoke Testを組み合わせることで、コストと作業量を抑えつつ、ユーザー影響と切り戻し可能性を考慮した移行を実現しました。
 
 ## まとめ
 
-完全なBlue/Green構成ほどの厳密性はありませんが、コストと作業量を抑えつつ、ユーザー影響を限定し、切り戻し可能なCI/CD移行を実現しました。
+今回の判断は、CI/CDツールの置き換えではなく、既存の本番経路を守りながら新しい運用基盤へ移行するための設計判断です。
+
+AI APIを利用するWebアプリでは、アプリ本体だけでなく、Secret管理、外部API連携、ALB経路、ECS Task、CI/CDの実行環境まで含めて確認する必要があります。
+
+この移行を通して、ECS上のAIアプリを安全に更新し続けるためには、デプロイ成功だけでなく、ユーザー経路での動作確認と切り戻し可能性を設計に含めることが重要だと学びました。
