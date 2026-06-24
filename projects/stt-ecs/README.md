@@ -1,5 +1,18 @@
 # STT + ECS
 
+<!-- STT_ECS_PHASE_POSITION_START -->
+## 位置づけ
+
+このプロジェクトは、`STT + ECS` シリーズのPhase 1です。
+
+- STT + ECS / Phase 1: アプリ基盤構築
+  - AI音声文字起こしアプリをDocker化し、ECS、ALB、ECR、Secrets Managerを使ってAWS上で動かす
+- [STT + ECS / Phase 2: CI/CD基盤移行](../stt-ecs-cicd-migration/)
+  - 既存のSTT + ECSアプリを対象に、GitHub ActionsからAWS CodePipeline / CodeBuildへCI/CD基盤を段階移行する
+
+<!-- STT_ECS_PHASE_POSITION_END -->
+
+
 ## 概要
 
 録音した音声をSTT（Speech to Text、音声をテキスト化する処理）で文字起こしして要約するWebアプリを作成し、そのアプリをDockerコンテナ化してAmazon ECS上で動かす検証プロジェクトです。
@@ -129,6 +142,6 @@ Qiita記事は準備中です。
 
 CI/CD移行では、Actions側ServiceとPipeline側Serviceを別Target Groupに分離し、本番入口を維持したまま一時的な検証用ListenerでPipeline側を確認しました。切替後は本番URL経由でSmoke Testを実行し、ALB、ECS、Secrets Manager、OpenAI APIまで含めたユーザー経路で動作確認しました。
 
-詳細は [STT + ECS / Phase 2: CI/CD基盤移行](../stt-ecs-cicd-migration/) に整理しています。
+Phase 2の詳細は [STT + ECS / Phase 2: CI/CD基盤移行](../stt-ecs-cicd-migration/) に整理しています。
 
 <!-- STT_ECS_PHASE2_END -->
