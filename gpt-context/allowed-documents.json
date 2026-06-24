@@ -27,7 +27,7 @@
     },
     {
       "id": "public-stt-ecs-cicd-migration",
-      "title": "STT + ECS CI/CD基盤移行",
+      "title": "STT + ECS / Phase 2: CI/CD基盤移行",
       "source": "public",
       "path": "gpt-context/summaries/stt-ecs-cicd-migration.md"
     }
