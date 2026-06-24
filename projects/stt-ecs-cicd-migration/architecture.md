@@ -51,17 +51,26 @@ Pipeline側の事前確認後、切替時にはALB Fixed responseを利用して
 ```mermaid
 flowchart LR
     User[User] -->|HTTPS:443| ALB[ALB]
+
     ALB --> PipelineTG[Pipeline側 Target Group]
     PipelineTG --> PipelineSvc[Pipeline側 ECS Service]
+
+    ALB -. 切替前の向き先 .-> OldActionsTG[× Actions側 Target Group<br>切替後は未使用]
+    OldActionsTG -.-> OldActionsSvc[Actions側 ECS Service<br>切り戻し用に一時保持]
+
+    classDef inactive fill:#f7f7f7,stroke:#999,stroke-dasharray: 5 5,color:#777;
+    class OldActionsTG,OldActionsSvc inactive;
 ```
 
 切替後は、ユーザー向けの本番経路がCodePipeline側Serviceへ向く構成になりました。
+
+旧Actions側のService / Target Groupは移行直後に即削除せず、切り戻し可能な状態として一時的に保持しました。
 
 ## 4. Smoke Test実施: 本番URL経由でユーザー経路を確認する
 
 切替後は、CodePipelineのDeploy成功だけで完了とせず、CodeBuildから本番URLへSmoke Testを実行しました。
 
-Smoke Testでは、ECS Task上のアプリがSecrets ManagerからAPIキーを受け取り、OpenAI API連携まで正常に行えることを確認しました。
+Smoke TestはSecretの値を直接確認するものではなく、本番URL経由でSTT APIを実行し、Secret注入とOpenAI API連携を含むユーザー経路が成立していることを確認するための検証です。
 
 ```mermaid
 flowchart LR
@@ -79,17 +88,9 @@ flowchart LR
     Task --> OpenAI[OpenAI API]
 ```
 
-このSmoke Testは、Secretの値を直接確認するものではありません。
-
-本番URL経由でSTT APIが成功することで、以下が成立していることを確認しています。
-
-- ALB HTTPS:443 がPipeline側Target Groupへ転送していること
-- Pipeline側Target Groupに正常なECS Taskが登録されていること
-- Secrets ManagerからAPIキーがECS Taskへ注入されていること
-- アプリがOpenAI APIへリクエストできること
-- STT APIが期待した応答を返すこと
-
 Smoke Testが失敗した場合は、Deploy自体が完了していても、Pipeline全体としては成功扱いにしない構成にしました。
+
+この検証の詳しい設計判断は、[Design Decisions](design-decisions.md) に整理しています。
 
 ## 補足
 
